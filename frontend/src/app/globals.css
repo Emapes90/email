@@ -6,11 +6,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Fonts ─────────────────────────────────────────────────────────────── */
+/* -- Fonts ------------------------------------------------------------ */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
-/* ── Base Layer ────────────────────────────────────────────────────────── */
+/* -- Base Layer ------------------------------------------------------- */
 
 @layer base {
   * {
@@ -45,7 +45,7 @@
   }
 }
 
-/* ── Component Layer ───────────────────────────────────────────────────── */
+/* -- Component Layer -------------------------------------------------- */
 
 @layer components {
   /* Cards */
@@ -60,7 +60,13 @@
   }
   /* Form Controls */
   .input {
-    @apply w-full px-4 py-2.5 bg-brand-900 border border-surface-200 rounded-xl text-sm text-white placeholder: text-brand-400 focus: border-accent focus: ring-1 focus: ring-accent/30 transition-all duration-200;
+    @apply w-full px-4 py-2.5 bg-brand-900 border border-surface-200 rounded-xl text-sm text-white transition-all duration-200;
+  }
+  .input::placeholder {
+    @apply text-brand-400;
+  }
+  .input:focus {
+    @apply border-accent ring-1 ring-accent/30;
   }
   .input-icon {
     @apply absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-400 pointer-events-none;
@@ -73,19 +79,37 @@
   }
   /* Buttons */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer select-none whitespace-nowrap disabled: opacity-40 disabled: cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer select-none whitespace-nowrap;
+  }
+  .btn:disabled {
+    @apply opacity-40 cursor-not-allowed;
   }
   .btn-primary {
-    @apply bg-white text-brand-900 hover: bg-brand-100 active: scale-[0.97] shadow-glow-sm;
+    @apply bg-white text-brand-900 shadow-glow-sm;
+  }
+  .btn-primary:hover {
+    @apply bg-brand-100;
+  }
+  .btn-primary:active {
+    @apply scale-[0.97];
   }
   .btn-secondary {
-    @apply bg-surface-50 text-brand-300 border border-surface-200 hover: bg-surface-100 hover: text-white;
+    @apply bg-surface-50 text-brand-300 border border-surface-200;
+  }
+  .btn-secondary:hover {
+    @apply bg-surface-100 text-white;
   }
   .btn-ghost {
-    @apply bg-transparent text-brand-300 hover: bg-surface-50 hover: text-white;
+    @apply bg-transparent text-brand-300;
+  }
+  .btn-ghost:hover {
+    @apply bg-surface-50 text-white;
   }
   .btn-danger {
-    @apply bg-red-500/10 text-red-400 hover: bg-red-500/20;
+    @apply bg-red-500/10 text-red-400;
+  }
+  .btn-danger:hover {
+    @apply bg-red-500/20;
   }
   .btn-sm {
     @apply px-3 py-1.5 text-xs rounded-lg;
@@ -139,7 +163,10 @@
     @apply px-4 py-3 border-t border-surface-200;
   }
   .data-table tbody tr {
-    @apply transition-colors hover: bg-surface-50/50;
+    @apply transition-colors;
+  }
+  .data-table tbody tr:hover {
+    @apply bg-surface-50/50;
   }
   /* Toast */
   .toast {
@@ -151,7 +178,7 @@
   }
 }
 
-/* ── Utilities ─────────────────────────────────────────────────────────── */
+/* -- Utilities -------------------------------------------------------- */
 
 @layer utilities {
   .text-gradient {
