@@ -851,8 +851,8 @@ score RCVD_IN_DNSWL_BLOCKED 0
 # blacklist_from spammer@example.com
 EOF
 
-    systemctl enable spamassassin
-    systemctl start spamassassin
+    systemctl enable spamd
+    systemctl start spamd
     sa-update 2>/dev/null || true
 
     log_info "SpamAssassin configured"
@@ -1269,7 +1269,7 @@ EOF
 start_services() {
     log_step "Starting All Services"
 
-    local services=(postfix dovecot opendkim spamassassin clamav-daemon clamav-freshclam)
+    local services=(postfix dovecot opendkim spamd clamav-daemon clamav-freshclam)
     for svc in "${services[@]}"; do
         systemctl enable "$svc" 2>/dev/null || true
         systemctl restart "$svc" 2>/dev/null && log_info "$svc started" || log_warn "$svc failed to start"
