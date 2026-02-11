@@ -1,0 +1,270 @@
+{% extends "base.html" %} {% block title %}Contacts — {{ app_name }}{% endblock
+%} {% block body %}
+<div class="app-layout">
+  {% include "_sidebar.html" %}
+
+  <div class="main-content">
+    <div class="contacts-page">
+      <!-- Contacts Sidebar -->
+      <div class="contacts-sidebar">
+        <button
+          class="btn btn-primary btn-block btn-sm mb-2"
+          onclick="
+            document.getElementById('contactId').value = '';
+            document.getElementById('contactForm').reset();
+            ProMail.openModal('contactModal');
+          "
+        >
+          <i class="fas fa-plus"></i> New Contact
+        </button>
+
+        <div class="nav-section" style="margin-top: 1rem">
+          <a
+            href="{{ url_for('contacts.index') }}"
+            class="nav-item {{ 'active' if not favorites and not current_group else '' }}"
+          >
+            <i class="fas fa-users"></i> All Contacts
+          </a>
+          <a
+            href="{{ url_for('contacts.index', favorites='1') }}"
+            class="nav-item {{ 'active' if favorites else '' }}"
+          >
+            <i class="fas fa-star"></i> Favorites
+          </a>
+        </div>
+
+        {% if groups %}
+        <div class="nav-section">
+          <div class="nav-section-label">Groups</div>
+          {% for group in groups %}
+          <a
+            href="{{ url_for('contacts.index', group=group.id) }}"
+            class="nav-item {{ 'active' if current_group == group.id|string else '' }}"
+          >
+            <i class="fas fa-tag"></i> {{ group.name }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Contacts Main -->
+      <div class="contacts-main">
+        <div
+          class="top-bar"
+          style="
+            position: static;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+          "
+        >
+          <span class="top-bar-title">
+            {% if favorites %}Favorites{% elif current_group %}Group{% else
+            %}All Contacts{% endif %}
+            <span style="color: var(--text-muted); font-weight: 400"
+              >({{ contacts|length }})</span
+            >
+          </span>
+          <div class="top-bar-search" style="max-width: 320px">
+            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Search contacts..."
+              value="{{ search }}"
+            />
+          </div>
+        </div>
+
+        {% if contacts|length > 0 %}
+        <div class="contacts-grid">
+          {% for contact in contacts %}
+          <div
+            class="contact-card"
+            onclick="ProMail.contacts.edit({{ contact.id }})"
+          >
+            <div class="contact-card-header">
+              <div
+                class="contact-avatar"
+                style="background:{{ contact.avatar_color }}"
+              >
+                {{ contact.initials }}
+              </div>
+              <div style="flex: 1; min-width: 0">
+                <div class="contact-name">{{ contact.full_name }}</div>
+                {% if contact.job_title or contact.company %}
+                <div class="contact-title">
+                  {{ contact.job_title }}{% if contact.job_title and
+                  contact.company %} at {% endif %}{{ contact.company }}
+                </div>
+                {% endif %}
+              </div>
+              <span
+                class="contact-favorite {{ 'active' if contact.is_favorite else '' }}"
+                data-id="{{ contact.id }}"
+                onclick="event.stopPropagation();ProMail.contacts.toggleFavorite({{ contact.id }})"
+              >
+                <i
+                  class="{{ 'fas' if contact.is_favorite else 'far' }} fa-star"
+                ></i>
+              </span>
+            </div>
+            <div class="contact-details">
+              {% if contact.email %}
+              <div class="contact-detail">
+                <i class="fas fa-envelope"></i> {{ contact.email }}
+              </div>
+              {% endif %} {% if contact.phone %}
+              <div class="contact-detail">
+                <i class="fas fa-phone"></i> {{ contact.phone }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="fas fa-address-book"></i>
+          </div>
+          <h3>No contacts found</h3>
+          <p>
+            {% if search %}No results for "{{ search }}"{% else %}Create your
+            first contact{% endif %}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal" style="max-width: 560px">
+    <div class="modal-header">
+      <h3>
+        <i
+          class="fas fa-user-plus"
+          style="color: var(--accent); margin-right: 0.5rem"
+        ></i>
+        Contact
+      </h3>
+      <button
+        class="btn btn-ghost btn-icon"
+        onclick="ProMail.closeModal('contactModal')"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="contactForm">
+        <input type="hidden" id="contactId" />
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input
+              type="text"
+              id="contactFirstName"
+              class="form-control"
+              placeholder="John"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input
+              type="text"
+              id="contactLastName"
+              class="form-control"
+              placeholder="Doe"
+            />
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <div class="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              id="contactEmail"
+              class="form-control"
+              placeholder="john@example.com"
+            />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input
+              type="text"
+              id="contactPhone"
+              class="form-control"
+              placeholder="+1 234 567 890"
+            />
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <div class="form-group">
+            <label>Company</label>
+            <input
+              type="text"
+              id="contactCompany"
+              class="form-control"
+              placeholder="Company name"
+            />
+          </div>
+          <div class="form-group">
+            <label>Job Title</label>
+            <input
+              type="text"
+              id="contactJobTitle"
+              class="form-control"
+              placeholder="Job title"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input
+            type="text"
+            id="contactAddress"
+            class="form-control"
+            placeholder="Street, City, Country"
+          />
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea
+            id="contactNotes"
+            class="form-control"
+            rows="2"
+            placeholder="Additional notes..."
+          ></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button
+        class="btn btn-danger btn-sm"
+        style="margin-right: auto"
+        id="contactDeleteBtn"
+        onclick="
+          const id = document.getElementById('contactId').value;
+          if (id) ProMail.contacts.remove(id);
+        "
+      >
+        <i class="fas fa-trash-alt"></i> Delete
+      </button>
+      <button
+        class="btn btn-secondary"
+        onclick="ProMail.closeModal('contactModal')"
+      >
+        Cancel
+      </button>
+      <button class="btn btn-primary" onclick="ProMail.contacts.save()">
+        <i class="fas fa-check"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

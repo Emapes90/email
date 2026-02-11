@@ -1,0 +1,140 @@
+{% extends "base.html" %} {% block title %}{{ folder|capitalize }} — {{ app_name
+}}{% endblock %} {% block body %}
+<div class="app-layout">
+  {% include "_sidebar.html" %}
+
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button
+        id="sidebarToggle"
+        class="btn btn-ghost btn-icon"
+        style="display: none"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
+      <span class="top-bar-title">{{ folder|capitalize }}</span>
+
+      <div class="top-bar-search">
+        <i class="fas fa-search"></i>
+        <input
+          type="text"
+          placeholder="Search emails..."
+          value="{{ search }}"
+        />
+      </div>
+
+      <div class="top-bar-actions">
+        <button
+          class="btn btn-ghost btn-icon"
+          data-tooltip="Refresh"
+          onclick="location.reload()"
+        >
+          <i class="fas fa-sync-alt"></i>
+        </button>
+        <span style="font-size: 0.8125rem; color: var(--text-tertiary)">
+          {% if total > 0 %}{{ (page-1)*25 + 1 }}–{{ [page*25, total]|min }} of
+          {{ total }}{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div style="padding: 1rem 1.5rem 0">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }}" data-auto-dismiss>
+        <i
+          class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"
+        ></i>
+        <span>{{ message }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Email List -->
+    <div class="email-list">
+      {% if messages|length > 0 %} {% for msg in messages %}
+      <a
+        href="{{ url_for('mail.read_message', uid=msg.uid, folder=folder) }}"
+        style="text-decoration: none"
+      >
+        <div class="email-item {{ 'unread' if not msg.is_read else '' }}">
+          <div
+            class="email-star {{ 'starred' if msg.is_flagged else '' }}"
+            data-uid="{{ msg.uid }}"
+            onclick="event.preventDefault();event.stopPropagation();ProMail.toggleStar('{{ msg.uid }}','{{ folder }}')"
+          >
+            <i class="{{ 'fas' if msg.is_flagged else 'far' }} fa-star"></i>
+          </div>
+
+          <div
+            class="email-avatar"
+            style="background:{{ ['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#22c55e','#06b6d4','#3b82f6']|random }}"
+          >
+            {{ msg.from_name[0]|upper if msg.from_name else '?' }}
+          </div>
+
+          <div class="email-content">
+            <div class="email-header">
+              <span class="email-sender"
+                >{{ msg.from_name or msg.from_email }}</span
+              >
+            </div>
+            <div class="email-subject">{{ msg.subject }}</div>
+            <div class="email-preview">
+              {{ msg.body_text[:100] if msg.body_text else '' }}
+            </div>
+          </div>
+
+          <div class="email-meta">
+            <span class="email-date">{{ msg.date_short }}</span> {% if
+            msg.has_attachments %}
+            <span class="email-attachment-icon"
+              ><i class="fas fa-paperclip"></i
+            ></span>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?folder={{ folder }}&page={{ page - 1 }}&search={{ search }}">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %} {% for p in range(1, total_pages + 1) %} {% if p == page %}
+        <span class="active">{{ p }}</span> {% elif p <=3 or p> total_pages - 3
+        or (p >= page - 1 and p <=p age + 1) %}
+        <a href="?folder={{ folder }}&page={{ p }}&search={{ search }}"
+          >{{ p }}</a
+        >
+        {% elif p == 4 or p == total_pages - 3 %}
+        <span style="color: var(--text-muted)">…</span> {% endif %} {% endfor %}
+        {% if page < total_pages %}
+        <a href="?folder={{ folder }}&page={{ page + 1 }}&search={{ search }}">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %} {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fas fa-inbox"></i>
+        </div>
+        <h3>No emails here</h3>
+        <p>
+          {% if search %}No results for "{{ search }}"{% else %}Your {{ folder
+          }} is empty{% endif %}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

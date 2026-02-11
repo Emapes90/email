@@ -1,0 +1,92 @@
+<!-- Sidebar Partial -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <i class="fas fa-paper-plane"></i>
+      </div>
+      <h2>{{ app_name }}</h2>
+    </div>
+  </div>
+
+  <div class="sidebar-compose">
+    <a href="{{ url_for('mail.compose') }}" class="btn btn-primary btn-block">
+      <i class="fas fa-plus"></i> Compose
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Mailbox</div>
+      {% set current_folder = request.args.get('folder', 'inbox') %} {% for key,
+      name in
+      [('inbox','Inbox'),('sent','Sent'),('drafts','Drafts'),('junk','Spam'),('trash','Trash'),('archive','Archive')]
+      %}
+      <a
+        href="{{ url_for('mail.inbox', folder=key) }}"
+        class="nav-item {{ 'active' if (folder is defined and folder == key) or (folder is not defined and key == 'inbox') else '' }}"
+        data-folder="{{ key }}"
+      >
+        <i
+          class="fas {{ {'inbox':'fa-inbox','sent':'fa-paper-plane','drafts':'fa-file-alt','junk':'fa-shield-alt','trash':'fa-trash-alt','archive':'fa-archive'}[key] }}"
+        ></i>
+        <span>{{ name }}</span>
+        <span class="badge" style="display: none">0</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Tools</div>
+      <a
+        href="{{ url_for('calendar.index') }}"
+        class="nav-item {{ 'active' if request.path.startswith('/calendar') else '' }}"
+      >
+        <i class="fas fa-calendar-alt"></i>
+        <span>Calendar</span>
+      </a>
+      <a
+        href="{{ url_for('contacts.index') }}"
+        class="nav-item {{ 'active' if request.path.startswith('/contacts') else '' }}"
+      >
+        <i class="fas fa-address-book"></i>
+        <span>Contacts</span>
+      </a>
+    </div>
+
+    {% if current_user.is_admin %}
+    <div class="nav-section">
+      <div class="nav-section-label">Administration</div>
+      <a
+        href="{{ url_for('admin.dashboard') }}"
+        class="nav-item {{ 'active' if request.path.startswith('/admin') else '' }}"
+      >
+        <i class="fas fa-cog"></i>
+        <span>Admin Panel</span>
+      </a>
+    </div>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">
+        {{ current_user.full_name[0]|upper if current_user.full_name else
+        current_user.email[0]|upper }}
+      </div>
+      <div class="user-info">
+        <div class="name">
+          {{ current_user.full_name or current_user.username }}
+        </div>
+        <div class="email">{{ current_user.email }}</div>
+      </div>
+      <a
+        href="{{ url_for('auth.logout') }}"
+        class="btn btn-ghost btn-icon"
+        data-tooltip="Sign Out"
+      >
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+  </div>
+</aside>

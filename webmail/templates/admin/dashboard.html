@@ -1,0 +1,308 @@
+{% extends "base.html" %} {% block title %}Admin Dashboard — {{ app_name }}{%
+endblock %} {% block body %}
+<div class="app-layout">
+  {% include "_sidebar.html" %}
+
+  <div class="main-content">
+    <!-- Admin Top Bar -->
+    <div class="top-bar">
+      <span class="top-bar-title"
+        ><i
+          class="fas fa-shield-alt"
+          style="color: var(--accent); margin-right: 0.5rem"
+        ></i>
+        Administration</span
+      >
+      <div class="top-bar-actions" style="margin-left: auto">
+        <a href="{{ url_for('admin.domains') }}" class="btn btn-ghost btn-sm"
+          >Domains</a
+        >
+        <a href="{{ url_for('admin.accounts') }}" class="btn btn-ghost btn-sm"
+          >Accounts</a
+        >
+        <a href="{{ url_for('admin.aliases') }}" class="btn btn-ghost btn-sm"
+          >Aliases</a
+        >
+        <a href="{{ url_for('admin.settings') }}" class="btn btn-ghost btn-sm"
+          >Settings</a
+        >
+        <a href="{{ url_for('admin.logs') }}" class="btn btn-ghost btn-sm"
+          >Logs</a
+        >
+      </div>
+    </div>
+
+    <div class="admin-page">
+      <div class="admin-header">
+        <h1>Dashboard</h1>
+        <p>System overview and mail server status</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon blue"><i class="fas fa-globe"></i></div>
+          </div>
+          <div class="stat-value">{{ stats.active_domains }}</div>
+          <div class="stat-label">Active Domains</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon green"><i class="fas fa-users"></i></div>
+          </div>
+          <div class="stat-value">{{ stats.active_accounts }}</div>
+          <div class="stat-label">Active Accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon purple">
+              <i class="fas fa-exchange-alt"></i>
+            </div>
+          </div>
+          <div class="stat-value">{{ stats.total_aliases }}</div>
+          <div class="stat-label">Email Aliases</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon cyan">
+              <i class="fas fa-sign-in-alt"></i>
+            </div>
+          </div>
+          <div class="stat-value">{{ stats.logins_today }}</div>
+          <div class="stat-label">Logins Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon red">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+          </div>
+          <div class="stat-value">{{ stats.failed_logins_today }}</div>
+          <div class="stat-label">Failed Logins</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon orange"><i class="fas fa-hdd"></i></div>
+          </div>
+          <div class="stat-value">{{ system_info.disk_percent }}%</div>
+          <div class="stat-label">Disk Usage</div>
+          <div class="progress-bar mt-1">
+            <div
+              class="progress-bar-fill"
+              style="width:{{ system_info.disk_percent }}%"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services & Logs -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem">
+        <!-- Service Status -->
+        <div class="card">
+          <div class="card-header">
+            <h3>
+              <i
+                class="fas fa-server"
+                style="color: var(--accent); margin-right: 0.5rem"
+              ></i>
+              Services
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="service-grid">
+              {% for service, status in services.items() %}
+              <div class="service-item">
+                <div
+                  class="service-dot {{ 'running' if status else 'stopped' if status == false else 'unknown' }}"
+                ></div>
+                <div>
+                  <div class="service-name">{{ service }}</div>
+                  <div style="font-size: 0.6875rem; color: var(--text-muted)">
+                    {{ 'Running' if status else 'Stopped' if status == false
+                    else 'Unknown' }}
+                  </div>
+                </div>
+                {% if status == false %}
+                <button
+                  class="btn btn-ghost btn-icon btn-sm"
+                  style="margin-left: auto"
+                  onclick="ProMail.admin.serviceAction('restart','{{ service }}')"
+                  data-tooltip="Restart"
+                >
+                  <i class="fas fa-redo-alt" style="font-size: 0.75rem"></i>
+                </button>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Logins -->
+        <div class="card">
+          <div class="card-header">
+            <h3>
+              <i
+                class="fas fa-history"
+                style="color: var(--accent); margin-right: 0.5rem"
+              ></i>
+              Recent Activity
+            </h3>
+            <a href="{{ url_for('admin.logs') }}" class="btn btn-ghost btn-sm"
+              >View All</a
+            >
+          </div>
+          <div class="card-body" style="padding: 0">
+            <table class="data-table" style="border: none; border-radius: 0">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>IP</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for log in recent_logins[:10] %}
+                <tr>
+                  <td class="truncate" style="max-width: 140px">
+                    {{ log.email }}
+                  </td>
+                  <td style="font-family: var(--font-mono); font-size: 0.75rem">
+                    {{ log.ip_address }}
+                  </td>
+                  <td>
+                    <span
+                      class="status-badge {{ 'active' if log.success else 'inactive' }}"
+                    >
+                      <span class="dot"></span> {{ 'OK' if log.success else
+                      'Fail' }}
+                    </span>
+                  </td>
+                  <td style="font-size: 0.75rem; color: var(--text-muted)">
+                    {{ log.created_at.strftime('%H:%M') if log.created_at else
+                    '' }}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Info -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h3>
+            <i
+              class="fas fa-info-circle"
+              style="color: var(--accent); margin-right: 0.5rem"
+            ></i>
+            System Information
+          </h3>
+        </div>
+        <div class="card-body">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 1rem;
+            "
+          >
+            <div>
+              <div
+                style="
+                  font-size: 0.75rem;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                "
+              >
+                Uptime
+              </div>
+              <div
+                style="
+                  font-size: 0.9375rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                  margin-top: 0.25rem;
+                "
+              >
+                {{ system_info.uptime }}
+              </div>
+            </div>
+            <div>
+              <div
+                style="
+                  font-size: 0.75rem;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                "
+              >
+                Total Disk
+              </div>
+              <div
+                style="
+                  font-size: 0.9375rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                  margin-top: 0.25rem;
+                "
+              >
+                {{ system_info.disk_total }}
+              </div>
+            </div>
+            <div>
+              <div
+                style="
+                  font-size: 0.75rem;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                "
+              >
+                Free Disk
+              </div>
+              <div
+                style="
+                  font-size: 0.9375rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                  margin-top: 0.25rem;
+                "
+              >
+                {{ system_info.disk_free }}
+              </div>
+            </div>
+            <div>
+              <div
+                style="
+                  font-size: 0.75rem;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                "
+              >
+                ProMail Version
+              </div>
+              <div
+                style="
+                  font-size: 0.9375rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                  margin-top: 0.25rem;
+                "
+              >
+                v{{ app_version }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
